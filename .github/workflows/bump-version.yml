@@ -28,9 +28,7 @@ concurrency:
 
 jobs:
   bump:
-    if: >-
-      github.actor != 'github-actions[bot]' &&
-      (github.event_name != 'push' || !startsWith(github.event.head_commit.message, 'chore(release):'))
+    if: github.event_name != 'push' || !startsWith(github.event.head_commit.message, 'chore(release):')
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -78,12 +76,6 @@ jobs:
           echo "last_tag=$last_tag" >> "$GITHUB_OUTPUT"
           echo "range=$range" >> "$GITHUB_OUTPUT"
           echo "bump=$bump" >> "$GITHUB_OUTPUT"
-
-      - name: Configure git author
-        working-directory: ${{ github.workspace }}
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Install dependencies
         run: npm ci
