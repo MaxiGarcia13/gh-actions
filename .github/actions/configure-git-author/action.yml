@@ -1,0 +1,22 @@
+name: Configure git author
+description: Configure git user.name and user.email for GitHub Actions commits
+
+inputs:
+  user_name:
+    description: Value for git config user.name
+    required: false
+    default: github-actions[bot]
+  user_email:
+    description: Value for git config user.email
+    required: false
+    default: github-actions[bot]@users.noreply.github.com
+
+runs:
+  using: composite
+  steps:
+    - name: Configure git author
+      shell: bash
+      working-directory: ${{ github.workspace }}
+      run: |
+        git config user.name "${{ inputs.user_name }}"
+        git config user.email "${{ inputs.user_email }}"
