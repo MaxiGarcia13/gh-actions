@@ -45,5 +45,5 @@ Prefer pinning to a tag or commit SHA instead of `@main` for stable builds.
 | Input | Default | Description |
 | --- | --- | --- |
 | `default_branch` | `main` | Branch receiving the bump commit and tags. |
-| `node_version` | `20` | Node.js version used by `actions/setup-node`. |
+| `node_version` | `24` | Node.js version used by `actions/setup-node`. |
 | `working_directory` | `.` | Directory containing `package.json` and `package-lock.json`. |
