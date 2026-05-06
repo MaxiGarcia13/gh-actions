@@ -1,72 +1,84 @@
 # Bump version (reusable workflow)
 
-Workflow: [`.github/workflows/bump-version/action.yml`](action.yml)
+Workflow file: [`.github/workflows/bump-version.yml`](bump-version.yml)
 
-Reusable workflow (`workflow_call` only): it bumps the **caller** repo’s `package.json` with `npm version`, creates a git tag, and pushes to the branch you configure. It uses `npm ci`, so a committed **`package-lock.json`** next to `package.json` is required.
+Reusable workflow (`workflow_call`) that bumps the caller repository version with `npm version`, creates a tag, and pushes commit + tags to the target branch.
 
-## When the job runs
+It runs `npm ci`, so `package-lock.json` must exist in the selected working directory.
 
-The bump job is skipped if:
+## What it does
 
-- `github.actor` is `github-actions[bot]`, or  
-- the event is **`push`** and the head commit message starts with `chore(release):`
+- Checks out with full history (`fetch-depth: 0`) and fetches tags.
+- Reads commit subjects between the latest `v*` tag (if present) and `HEAD`.
+- Chooses bump level:
+  - `minor` by default
+  - `patch` if any commit subject matches conventional-commit `fix` format (`fix:` / `fix(scope):`, optional `!`)
+- Runs `npm version <minor|patch> -m "chore(release): v%s"`.
+- Pushes `HEAD` and tags to `default_branch`.
 
-For reuse, the [`github` context is the caller’s run](https://docs.github.com/en/actions/reference/workflows-and-actions/reusing-workflow-configurations#github-context), so you do not need an extra `if` on the calling job.
+## Skip behavior
 
-## Use in this repository (push to `main`)
+The job is skipped when:
 
-Add a small caller workflow under `.github/workflows/` (for example `bump-version-on-push.yml`) that triggers on `push` to `main` and calls this file with a **relative** path:
+- the event is `push`, and
+- the head commit message starts with `chore(release):`
 
-```yaml
-name: Bump version on main
+This prevents infinite loops after the workflow creates the release commit.
 
-on:
-  push:
-    branches:
-      - main
+## Usage in the same repository
 
-permissions:
-  contents: write
-
-jobs:
-  bump:
-    uses: ./.github/workflows/bump-version/action.yml
-    secrets: inherit
-```
-
-## Use from another repository
+Create a caller workflow (for example, on push to `main`) and reference this reusable workflow by relative path:
 
 ```yaml
 name: Bump version on main
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
 
 permissions:
   contents: write
 
 jobs:
   bump:
-    uses: MaxiGarcia13/gh-actions/.github/workflows/bump-version/action.yml@main
+    uses: ./.github/workflows/bump-version.yml
     secrets: inherit
 ```
 
-Pin `@main` to a tag or commit SHA when you care about stability. Source repo: [MaxiGarcia13/gh-actions](https://github.com/MaxiGarcia13/gh-actions).
+## Usage from another repository
 
-### Inputs
+```yaml
+name: Bump version on main
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  bump:
+    uses: MaxiGarcia13/gh-actions/.github/workflows/bump-version.yml@main
+    secrets: inherit
+```
+
+Prefer pinning to a tag or commit SHA instead of `@main` for stable builds.
+
+## Inputs
 
 | Input | Default | Description |
 | --- | --- | --- |
-| `default_branch` | `main` | Branch for `git push origin HEAD:<branch>`. |
-| `node_version` | `20` | Node version for `actions/setup-node`. |
-| `working_directory` | `.` | Directory that contains `package.json` (monorepos). |
+| `default_branch` | `main` | Branch receiving the bump commit and tags (`git push origin HEAD:<branch> --follow-tags`). |
+| `node_version` | `20` | Node.js version used by `actions/setup-node`. |
+| `working_directory` | `.` | Directory containing `package.json` and `package-lock.json` (useful for monorepos). |
+
+Example with custom inputs:
 
 ```yaml
 jobs:
   bump:
-    uses: MaxiGarcia13/gh-actions/.github/workflows/bump-version/action.yml@main
+    uses: MaxiGarcia13/gh-actions/.github/workflows/bump-version.yml@main
     secrets: inherit
     with:
       default_branch: main
@@ -74,19 +86,6 @@ jobs:
       working_directory: packages/app
 ```
 
-## Bump rules
-
-Between the latest `v*` tag (if any) and `HEAD`, commit subjects are scanned:
-
-- Default: **minor** (`npm version minor`).
-- **Patch** if any subject matches conventional-commit **fix** (`fix:` / `fix(scope):`, optional `!`).
-
-Version commit message: `chore(release): v%s` (npm substitutes the new version).
-
 ## Concurrency
 
-Group: `bump-version-${{ github.repository }}-${{ github.ref }}`, `cancel-in-progress: false` (runs queue instead of cancelling each other).
-
-## About this path
-
-This workflow and README live under `.github/workflows/bump-version/`. Callers reference **`.github/workflows/bump-version/action.yml@REF`**. GitHub’s docs recommend keeping workflow YAML directly under `.github/workflows/`; if you hit path or reuse issues, move the file to the workflows root and update `uses:` paths accordingly.
+Uses the group `bump-version-${{ github.repository }}-${{ github.ref }}` with `cancel-in-progress: false`, so concurrent runs queue instead of cancelling each other.
