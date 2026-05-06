@@ -21,7 +21,7 @@ Configures git commit identity for workflows that create commits or tags.
 
 ```yaml
 jobs:
-  release:
+  configure-git-author:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -36,10 +36,10 @@ jobs:
 
 ## Inputs
 
-| Input | Required | Default | Description |
-| --- | --- | --- | --- |
-| `user_name` | No | `github-actions[bot]` | Value for `git config user.name`. |
-| `user_email` | No | `github-actions[bot]@users.noreply.github.com` | Value for `git config user.email`. |
+| Input        | Required | Default                                        | Description                        |
+| ------------ | -------- | ---------------------------------------------- | ---------------------------------- |
+| `user_name`  | No       | `github-actions[bot]`                          | Value for `git config user.name`.  |
+| `user_email` | No       | `github-actions[bot]@users.noreply.github.com` | Value for `git config user.email`. |
 
 ## Notes
 
