@@ -12,7 +12,7 @@ on:
         description: Node.js version for setup-node
         type: string
         required: false
-        default: "20"
+        default: "24"
       working_directory:
         description: Directory containing package.json (use . for repo root)
         type: string
@@ -41,7 +41,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ inputs.node_version || '20' }}
+          node-version: ${{ inputs.node_version }}
           cache: npm
           cache-dependency-path: ${{ (inputs.working_directory || '.') == '.' && 'package-lock.json' || format('{0}/package-lock.json', inputs.working_directory || '.') }}
 
