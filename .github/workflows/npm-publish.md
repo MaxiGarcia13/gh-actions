@@ -27,12 +27,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  bump:
-    uses: ./.github/workflows/bump-version.yml
-    secrets: inherit
-
   publish:
-    needs: bump
     uses: ./.github/workflows/npm-publish.yml
     secrets: inherit
     with:
@@ -49,7 +44,6 @@ on:
 
 jobs:
   publish:
-    needs: bump
     uses: MaxiGarcia13/gh-actions/.github/workflows/npm-publish.yml@main
     secrets: inherit
     with:
