@@ -1,0 +1,62 @@
+name: Bump major
+
+on:
+  workflow_call:
+    inputs:
+      default_branch:
+        description: Branch to push the major bump and tags to
+        type: string
+        required: false
+        default: main
+      node_version:
+        description: Node.js version for setup-node
+        type: string
+        required: false
+        default: "20"
+      working_directory:
+        description: Directory containing package.json (use . for repo root)
+        type: string
+        required: false
+        default: "."
+
+permissions:
+  contents: write
+
+concurrency:
+  group: bump-major-${{ github.repository }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ inputs.working_directory || '.' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node_version || '20' }}
+          cache: npm
+          cache-dependency-path: ${{ (inputs.working_directory || '.') == '.' && 'package-lock.json' || format('{0}/package-lock.json', inputs.working_directory || '.') }}
+
+      - name: Configure git author
+        uses: MaxiGarcia13/gh-actions/.github/actions/configure-git-author@main
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Bump major version, commit, and tag
+        run: |
+          set -euo pipefail
+          npm version major -m "chore(release): v%s"
+
+      - name: Push commit and tags
+        working-directory: ${{ github.workspace }}
+        run: |
+          git push origin "HEAD:${{ inputs.default_branch || 'main' }}" --follow-tags
