@@ -29,6 +29,8 @@ concurrency:
 jobs:
   bump:
     runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.release_tag.outputs.tag }}
     defaults:
       run:
         working-directory: ${{ inputs.working_directory || '.' }}
@@ -56,7 +58,20 @@ jobs:
           set -euo pipefail
           npm version major -m "chore(release): v%s"
 
+      - name: Read release tag
+        id: release_tag
+        uses: ./.github/actions/read-release-tag
+        with:
+          working_directory: ${{ inputs.working_directory || '.' }}
+
       - name: Push commit and tags
         working-directory: ${{ github.workspace }}
         run: |
-          git push origin "HEAD:${{ inputs.default_branch || 'main' }}" --follow-tags
+          git push origin "HEAD:${{ inputs.default_branch }}" --follow-tags
+
+  release-notes:
+    needs: bump
+    uses: ./.github/workflows/create-release-notes.yml
+    with:
+      tag: ${{ needs.bump.outputs.tag }}
+      default_branch: ${{ inputs.default_branch }}
