@@ -1,0 +1,24 @@
+name: Read release tag
+description: Read package.json version and expose it as a v-prefixed tag output
+
+inputs:
+  working_directory:
+    description: Directory containing package.json
+    required: false
+    default: "."
+
+outputs:
+  tag:
+    description: Release tag (vMajor.minor.patch)
+    value: ${{ steps.read.outputs.tag }}
+
+runs:
+  using: composite
+  steps:
+    - id: read
+      shell: bash
+      working-directory: ${{ inputs.working_directory }}
+      run: |
+        set -euo pipefail
+        VERSION="$(node -p "require('./package.json').version")"
+        echo "tag=v${VERSION}" >> "$GITHUB_OUTPUT"
