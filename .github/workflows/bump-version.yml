@@ -94,7 +94,7 @@ jobs:
 
       - name: Read release tag
         id: release_tag
-        uses: ./.github/actions/read-release-tag
+        uses: MaxiGarcia13/gh-actions/.github/actions/read-release-tag
         with:
           working_directory: ${{ inputs.working_directory || '.' }}
 
