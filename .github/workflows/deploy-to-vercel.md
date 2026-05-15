@@ -29,6 +29,15 @@ That sets [`git.deploymentEnabled`](https://vercel.com/docs/project-configuratio
 
 Ensure the Vercel project is linked for CI (for example via `vercel pull` / project settings and environment variables such as org and project IDs where your setup requires them).
 
+## GitHub Environments and Deployments
+
+The deploy job uses a [GitHub Environment](https://docs.github.com/en/actions/deployment/targeting-different-environments/using-environments-for-deployment) so runs appear under the repository’s **Environments** / deployment activity. Configure or review the environment under **Settings → Environments** (for example create `production` before first use).
+
+- **`deployment_environment`** — Name of that GitHub Environment (default `production`).
+- **`deployment_url`** — Optional stable URL shown as the environment link in the GitHub UI (for example your production domain or Vercel alias). Leave empty to record the deployment without a URL. The CLI does not feed this value automatically; pass whatever URL you want callers to open.
+
+You cannot set `environment` on the **caller** job that invokes `workflow_call`; GitHub only allows a limited set of keys there. Pass these inputs via `with:` so the reusable workflow attaches the environment to the actual deploy job.
+
 ## Secrets
 
 | Secret         | Description                                                                                                            |
@@ -48,6 +57,9 @@ jobs:
   deploy:
     uses: ./.github/workflows/deploy-to-vercel.yml
     secrets: inherit
+    with:
+      deployment_environment: production
+      deployment_url: https://your-production-domain.example
 ```
 
 ## Usage from another repository
@@ -57,16 +69,20 @@ jobs:
   deploy:
     uses: MaxiGarcia13/gh-actions/.github/workflows/deploy-to-vercel.yml@main
     secrets: inherit
+    with:
+      deployment_url: https://your-production-domain.example
 ```
 
-Prefer pinning to a tag or commit SHA instead of `@main` for stable builds.
+Prefer pinning to a tag or commit SHA instead of `@main` for stable builds. Omit `with` entirely to use defaults (`deployment_environment: production`, no URL).
 
 ## Inputs
 
-| Input               | Default | Description                                                 |
-| ------------------- | ------- | ----------------------------------------------------------- |
-| `node_version`      | `24`    | Node.js version used by `actions/setup-node`.               |
-| `working_directory` | `.`     | Directory containing `package.json` (useful for monorepos). |
+| Input                     | Default        | Description                                                                                      |
+| ------------------------- | -------------- | ------------------------------------------------------------------------------------------------ |
+| `node_version`            | `24`           | Node.js version used by `actions/setup-node`.                                                    |
+| `working_directory`       | `.`            | Directory containing `package.json` (useful for monorepos).                                      |
+| `deployment_environment`  | `production`   | GitHub Environment name for this job (Deployments / Environments UI).                            |
+| `deployment_url`          | _(empty)_      | Optional URL for the environment link in GitHub; omit or leave empty to skip the link.           |
 
 Example with custom inputs:
 
@@ -78,4 +94,6 @@ jobs:
     with:
       node_version: "24"
       working_directory: apps/web
+      deployment_environment: production
+      deployment_url: https://your-app.vercel.app
 ```
