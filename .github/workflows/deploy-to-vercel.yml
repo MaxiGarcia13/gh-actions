@@ -13,10 +13,21 @@ on:
         type: string
         required: false
         default: "."
+      deployment_environment:
+        description: GitHub Environment name (shown under repo Deployments / Environments)
+        type: string
+        required: false
+        default: production
+      deployment_url:
+        description: Optional URL for this deployment (shown as the environment link on GitHub)
+        type: string
+        required: false
+        default: ""
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    environment: ${{ inputs.deployment_url != '' && fromJSON(format('{{"name":{0},"url":{1}}}', toJSON(inputs.deployment_environment), toJSON(inputs.deployment_url))) || fromJSON(format('{{"name":{0}}}', toJSON(inputs.deployment_environment))) }}
     defaults:
       run:
         working-directory: ${{ inputs.working_directory || '.' }}
