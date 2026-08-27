@@ -12,13 +12,62 @@ on:
         type: string
         required: false
         default: main
+      title:
+        description: Release title (supports {{tag}} placeholder; defaults to "Release <tag>")
+        type: string
+        required: false
+        default: ""
+      notes_template:
+        description: Path to a release notes template file in the repo (supports {{tag}}, {{version}}, {{repository}}, {{generated_notes}})
+        type: string
+        required: false
+        default: ""
+      notes_start_tag:
+        description: Previous tag to start from when generating release notes
+        type: string
+        required: false
+        default: ""
+      notes_config:
+        description: Path to a GitHub release notes configuration file (for example .github/release.yml)
+        type: string
+        required: false
+        default: ""
+      generate_notes:
+        description: Use GitHub-generated release notes when no template is provided, or to fill {{generated_notes}} in a template
+        type: boolean
+        required: false
+        default: true
+      draft:
+        description: Create the release as a draft
+        type: boolean
+        required: false
+        default: false
+      prerelease:
+        description: Mark the release as a prerelease
+        type: boolean
+        required: false
+        default: false
+    outputs:
+      created:
+        description: Whether a new release was created (false if the release already existed)
+        value: ${{ jobs.release.outputs.created }}
+      release_url:
+        description: URL of the GitHub Release
+        value: ${{ jobs.release.outputs.release_url }}
 
 permissions:
   contents: write
 
+concurrency:
+  group: create-release-${{ github.repository }}-${{ inputs.tag }}
+  cancel-in-progress: false
+
 jobs:
   release:
     runs-on: ubuntu-latest
+    outputs:
+      created: ${{ steps.create.outputs.created }}
+      release_url: ${{ steps.create.outputs.release_url }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -31,19 +80,106 @@ jobs:
         run: |
           set -euo pipefail
           git fetch origin "refs/tags/${{ inputs.tag }}:refs/tags/${{ inputs.tag }}" 2>/dev/null || git fetch origin --tags --force
+          git rev-parse "refs/tags/${{ inputs.tag }}" >/dev/null
 
       - name: Create GitHub Release
+        id: create
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
+
           TAG="${{ inputs.tag }}"
-          if gh release view "$TAG" --repo "${{ github.repository }}" >/dev/null 2>&1; then
+          REPO="${{ github.repository }}"
+          TITLE="${{ inputs.title }}"
+          TEMPLATE="${{ inputs.notes_template }}"
+          START_TAG="${{ inputs.notes_start_tag }}"
+          NOTES_CONFIG="${{ inputs.notes_config }}"
+          GENERATE_NOTES="${{ inputs.generate_notes }}"
+          DRAFT="${{ inputs.draft }}"
+          PRERELEASE="${{ inputs.prerelease }}"
+
+          if gh release view "$TAG" --repo "$REPO" >/dev/null 2>&1; then
             echo "Release $TAG already exists, skipping."
+            echo "created=false" >> "$GITHUB_OUTPUT"
+            echo "release_url=$(gh release view "$TAG" --repo "$REPO" --json url -q .url)" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          gh release create "$TAG" \
-            --repo "${{ github.repository }}" \
-            --title "Release $TAG" \
-            --generate-notes \
+
+          if [[ -z "$TITLE" ]]; then
+            TITLE="Release $TAG"
+          fi
+          TITLE="${TITLE//\{\{tag\}\}/$TAG}"
+
+          generate_notes_body() {
+            local api_args=( -f "tag_name=$TAG" )
+            if [[ -n "$START_TAG" ]]; then
+              api_args+=( -f "previous_tag_name=$START_TAG" )
+            fi
+            if [[ -n "$NOTES_CONFIG" ]]; then
+              api_args+=( -f "configuration_file_path=$NOTES_CONFIG" )
+            fi
+            gh api "repos/$REPO/releases/generate-notes" "${api_args[@]}" --jq .body
+          }
+
+          notes_file=""
+          cleanup_notes_file() {
+            if [[ -n "$notes_file" && -f "$notes_file" ]]; then
+              rm -f "$notes_file"
+            fi
+          }
+          trap cleanup_notes_file EXIT
+
+          release_args=(
+            --repo "$REPO"
+            --title "$TITLE"
             --verify-tag
+          )
+
+          if [[ "$DRAFT" == "true" ]]; then
+            release_args+=( --draft )
+          fi
+          if [[ "$PRERELEASE" == "true" ]]; then
+            release_args+=( --prerelease )
+          fi
+
+          if [[ -n "$TEMPLATE" ]]; then
+            if [[ ! -f "$TEMPLATE" ]]; then
+              echo "Release notes template not found: $TEMPLATE" >&2
+              exit 1
+            fi
+
+            content="$(<"$TEMPLATE")"
+            version="${TAG#v}"
+            content="${content//\{\{tag\}\}/$TAG}"
+            content="${content//\{\{version\}\}/$VERSION}"
+            content="${content//\{\{repository\}\}/$REPO}"
+
+            if [[ "$content" == *"{{generated_notes}}"* ]]; then
+              generated_notes="$(generate_notes_body)"
+              content="${content//\{\{generated_notes\}\}/$GENERATED_NOTES}"
+            fi
+
+            notes_file="$(mktemp)"
+            printf '%s\n' "$content" > "$notes_file"
+            release_args+=( --notes-file "$notes_file" )
+          elif [[ "$GENERATE_NOTES" == "true" ]]; then
+            if [[ -n "$NOTES_CONFIG" ]]; then
+              notes_file="$(mktemp)"
+              generate_notes_body > "$notes_file"
+              release_args+=( --notes-file "$notes_file" )
+            else
+              release_args+=( --generate-notes )
+              if [[ -n "$START_TAG" ]]; then
+                release_args+=( --notes-start-tag "$START_TAG" )
+              fi
+            fi
+          else
+            echo "Set generate_notes to true or provide notes_template." >&2
+            exit 1
+          fi
+
+          gh release create "$TAG" "${release_args[@]}"
+
+          echo "created=true" >> "$GITHUB_OUTPUT"
+          echo "release_url=$(gh release view "$TAG" --repo "$REPO" --json url -q .url)" >> "$GITHUB_OUTPUT"
