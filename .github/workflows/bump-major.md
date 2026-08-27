@@ -64,3 +64,11 @@ jobs:
 ```
 
 Release note customization (templates, title, draft/prerelease) is configured on [`create-release-notes.yml`](create-release-notes.yml). These bump workflows only toggle whether that step runs.
+
+## Outputs
+
+| Output | Description |
+| --- | --- |
+| `tag` | Release tag created by the bump (for example `v2.0.0`). |
+
+Downstream jobs in the caller workflow can read it as `needs.bump.outputs.tag`.

@@ -28,6 +28,10 @@ on:
         type: boolean
         required: false
         default: false
+    outputs:
+      tag:
+        description: Release tag created by the bump (for example v1.2.3)
+        value: ${{ jobs.bump.outputs.tag }}
 
 permissions:
   contents: write

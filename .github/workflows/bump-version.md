@@ -102,6 +102,27 @@ jobs:
 
 Release note customization (templates, title, draft/prerelease) is configured on [`create-release-notes.yml`](create-release-notes.yml). These bump workflows only toggle whether that step runs.
 
+## Outputs
+
+| Output | Description |
+| --- | --- |
+| `tag` | Release tag created by the bump (for example `v1.2.3`). Empty when the bump job is skipped. |
+
+Downstream jobs in the caller workflow can read it as `needs.bump.outputs.tag`:
+
+```yaml
+jobs:
+  bump:
+    uses: MaxiGarcia13/gh-actions/.github/workflows/bump-version.yml@main
+    secrets: inherit
+
+  deploy:
+    needs: bump
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Released ${{ needs.bump.outputs.tag }}"
+```
+
 ## Concurrency
 
 Uses the group `bump-version-${{ github.repository }}-${{ github.ref }}` with `cancel-in-progress: false`, so concurrent runs queue instead of cancelling each other.
