@@ -53,6 +53,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Clean working directory
+        run: git restore .
+
       - name: Bump major version, commit, and tag
         run: |
           set -euo pipefail

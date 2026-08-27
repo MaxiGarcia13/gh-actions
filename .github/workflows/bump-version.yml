@@ -85,6 +85,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: clean working directory
+        run: git restore .
+
       - name: Bump version, commit, and tag
         env:
           BUMP: ${{ steps.bump.outputs.bump }}
