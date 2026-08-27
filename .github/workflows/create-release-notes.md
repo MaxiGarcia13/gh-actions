@@ -116,6 +116,7 @@ Prefer pinning to a tag or commit SHA instead of `@main` for stable builds.
 | `generate_notes`   | `true`  | Use GitHub-generated notes when no template is provided.                    |
 | `draft`            | `false` | Create the release as a draft.                                              |
 | `prerelease`       | `false` | Mark the release as a prerelease.                                           |
+| `lfs`              | `false` | When `true`, fetches Git LFS files during checkout.                         |
 
 ## Outputs
 

@@ -23,6 +23,11 @@ on:
         type: boolean
         required: false
         default: true
+      lfs:
+        description: Whether to fetch Git LFS files during checkout
+        type: boolean
+        required: false
+        default: false
 
 permissions:
   contents: write
@@ -45,6 +50,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          lfs: ${{ inputs.lfs }}
 
       - name: Setup Node
         uses: actions/setup-node@v4
