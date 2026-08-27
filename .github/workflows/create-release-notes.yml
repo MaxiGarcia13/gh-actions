@@ -82,6 +82,10 @@ jobs:
           fetch-tags: true
           lfs: ${{ inputs.lfs }}
 
+      - name: Pull LFS files
+        if: inputs.lfs
+        run: git lfs pull
+
       - name: Ensure release tag is available
         run: |
           set -euo pipefail

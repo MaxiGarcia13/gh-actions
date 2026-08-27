@@ -45,6 +45,10 @@ jobs:
       - name: Pull latest changes
         run: git pull origin main
 
+      - name: Pull LFS files
+        if: inputs.lfs
+        run: git lfs pull
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
