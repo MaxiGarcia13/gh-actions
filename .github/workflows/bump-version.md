@@ -15,6 +15,7 @@ It runs `npm ci`, so `package-lock.json` must exist in the selected working dire
   - `patch` if any commit subject matches conventional-commit `fix` format (`fix:` / `fix(scope):`, optional `!`)
 - Runs `npm version <minor|patch> -m "chore(release): v%s"`.
 - Pushes `HEAD` and tags to `default_branch`.
+- When `use_release_notes` is `true` (default), calls [`create-release-notes.yml`](create-release-notes.yml) to create a GitHub Release for the new tag.
 
 ## Skip behavior
 
@@ -72,6 +73,7 @@ Prefer pinning to a tag or commit SHA instead of `@main` for stable builds.
 | `default_branch` | `main` | Branch receiving the bump commit and tags (`git push origin HEAD:<branch> --follow-tags`). |
 | `node_version` | `24` | Node.js version used by `actions/setup-node`. |
 | `working_directory` | `.` | Directory containing `package.json` and `package-lock.json` (useful for monorepos). |
+| `use_release_notes` | `true` | When `true`, runs the `release-notes` job after the bump to create a GitHub Release via [`create-release-notes.yml`](create-release-notes.yml). Set to `false` to skip release creation. |
 
 Example with custom inputs:
 
@@ -85,6 +87,19 @@ jobs:
       node_version: "24"
       working_directory: packages/app
 ```
+
+To bump without creating a GitHub Release:
+
+```yaml
+jobs:
+  bump:
+    uses: MaxiGarcia13/gh-actions/.github/workflows/bump-version.yml@main
+    secrets: inherit
+    with:
+      use_release_notes: false
+```
+
+Release note customization (templates, title, draft/prerelease) is configured on [`create-release-notes.yml`](create-release-notes.yml). These bump workflows only toggle whether that step runs.
 
 ## Concurrency
 

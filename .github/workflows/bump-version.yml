@@ -18,6 +18,11 @@ on:
         type: string
         required: false
         default: "."
+      use_release_notes:
+        description: Whether to use release notes
+        type: boolean
+        required: false
+        default: true
 
 permissions:
   contents: write
@@ -107,6 +112,7 @@ jobs:
           git push origin "HEAD:${{ inputs.default_branch }}" --follow-tags
 
   release-notes:
+    if: inputs.use_release_notes
     needs: bump
     uses: ./.github/workflows/create-release-notes.yml
     with:
