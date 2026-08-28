@@ -18,6 +18,16 @@ on:
         type: string
         required: false
         default: "."
+      paths:
+        description: Newline-separated globs; bump only if at least one changed file since the last tag matches
+        type: string
+        required: false
+        default: ""
+      paths_ignore:
+        description: Newline-separated globs; skip bump when every changed file since the last tag matches
+        type: string
+        required: false
+        default: ""
     outputs:
       tag:
         description: Release tag created by the bump (for example v1.2.3)
@@ -44,7 +54,24 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Resolve release range
+        id: range
+        uses: ./.github/actions/resolve-release-range
+
+      - name: Check changed paths
+        id: paths
+        uses: ./.github/actions/check-release-paths
+        with:
+          range: ${{ steps.range.outputs.range }}
+          paths: ${{ inputs.paths }}
+          paths_ignore: ${{ inputs.paths_ignore }}
+
+      - name: Skip bump (no relevant path changes)
+        if: steps.paths.outputs.should_bump != 'true'
+        run: echo "Skipping bump; changed files do not match path filters."
+
       - name: Setup Node
+        if: steps.paths.outputs.should_bump == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: ${{ inputs.node_version }}
@@ -52,23 +79,28 @@ jobs:
           cache-dependency-path: ${{ (inputs.working_directory || '.') == '.' && 'package-lock.json' || format('{0}/package-lock.json', inputs.working_directory || '.') }}
 
       - name: Configure git author
+        if: steps.paths.outputs.should_bump == 'true'
         uses: MaxiGarcia13/gh-actions/.github/actions/configure-git-author@main
 
       - name: Install dependencies
+        if: steps.paths.outputs.should_bump == 'true'
         run: npm ci
 
       - name: Bump major version, commit, and tag
+        if: steps.paths.outputs.should_bump == 'true'
         run: |
           set -euo pipefail
           npm version major -m "chore(release): v%s"
 
       - name: Read release tag
+        if: steps.paths.outputs.should_bump == 'true'
         id: release_tag
         uses: MaxiGarcia13/gh-actions/.github/actions/read-release-tag@main
         with:
           working_directory: ${{ inputs.working_directory || '.' }}
 
       - name: Push commit and tags
+        if: steps.paths.outputs.should_bump == 'true'
         working-directory: ${{ github.workspace }}
         run: |
           git push origin "HEAD:${{ inputs.default_branch }}" --follow-tags

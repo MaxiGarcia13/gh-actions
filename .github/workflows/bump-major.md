@@ -49,6 +49,23 @@ Prefer pinning to a tag or commit SHA instead of `@main` for stable builds.
 | `default_branch`    | `main`  | Branch receiving the bump commit and tags.                   |
 | `node_version`      | `24`    | Node.js version used by `actions/setup-node`.                |
 | `working_directory` | `.`     | Directory containing `package.json` and `package-lock.json`. |
+| `paths`             | `""`    | Newline-separated globs. Bump only if at least one file changed since the last tag matches. |
+| `paths_ignore`      | `""`    | Newline-separated globs. Skip bump when every changed file since the last tag matches.     |
+
+Path filters use `<last-v*-tag>..HEAD`. When both inputs are empty, the bump always proceeds.
+
+Example — major bump only when app code changed:
+
+```yaml
+jobs:
+  bump:
+    uses: MaxiGarcia13/gh-actions/.github/workflows/bump-major.yml@main
+    secrets: inherit
+    with:
+      working_directory: packages/app
+      paths: |
+        packages/app/**
+```
 
 To bump without creating a GitHub Release:
 
@@ -67,6 +84,6 @@ Release note customization (templates, title, draft/prerelease) is configured on
 
 | Output | Description                                             |
 | ------ | ------------------------------------------------------- |
-| `tag`  | Release tag created by the bump (for example `v2.0.0`). |
+| `tag`  | Release tag created by the bump (for example `v2.0.0`). Empty when path filters skip the bump. |
 
 Downstream jobs in the caller workflow can read it as `needs.bump.outputs.tag`.

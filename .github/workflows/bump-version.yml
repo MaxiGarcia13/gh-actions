@@ -18,6 +18,16 @@ on:
         type: string
         required: false
         default: "."
+      paths:
+        description: Newline-separated globs; bump only if at least one changed file since the last tag matches
+        type: string
+        required: false
+        default: ""
+      paths_ignore:
+        description: Newline-separated globs; skip bump when every changed file since the last tag matches
+        type: string
+        required: false
+        default: ""
     outputs:
       tag:
         description: Release tag created by the bump (for example v1.2.3)
@@ -45,12 +55,9 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ inputs.node_version }}
-          cache: npm
-          cache-dependency-path: ${{ (inputs.working_directory || '.') == '.' && 'package-lock.json' || format('{0}/package-lock.json', inputs.working_directory || '.') }}
+      - name: Resolve release range
+        id: range
+        uses: ./.github/actions/resolve-release-range
 
       - name: Decide bump (minor if any feat:, else patch)
         id: bump
@@ -59,19 +66,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          git fetch --tags --force
-
-          last_tag=""
-          if git describe --tags --match "v*" --abbrev=0 >/dev/null 2>&1; then
-            last_tag="$(git describe --tags --match "v*" --abbrev=0)"
-          fi
-
-          if [[ -n "$last_tag" ]]; then
-            range="${last_tag}..HEAD"
-          else
-            range="HEAD"
-          fi
-
+          range="${{ steps.range.outputs.range }}"
           subjects="$(git log "$range" --format=%s || true)"
 
           bump="minor"
@@ -79,17 +74,38 @@ jobs:
             bump="patch"
           fi
 
-          echo "last_tag=$last_tag" >> "$GITHUB_OUTPUT"
-          echo "range=$range" >> "$GITHUB_OUTPUT"
           echo "bump=$bump" >> "$GITHUB_OUTPUT"
 
+      - name: Check changed paths
+        id: paths
+        uses: ./.github/actions/check-release-paths
+        with:
+          range: ${{ steps.range.outputs.range }}
+          paths: ${{ inputs.paths }}
+          paths_ignore: ${{ inputs.paths_ignore }}
+
+      - name: Skip bump (no relevant path changes)
+        if: steps.paths.outputs.should_bump != 'true'
+        run: echo "Skipping bump; changed files do not match path filters."
+
+      - name: Setup Node
+        if: steps.paths.outputs.should_bump == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node_version }}
+          cache: npm
+          cache-dependency-path: ${{ (inputs.working_directory || '.') == '.' && 'package-lock.json' || format('{0}/package-lock.json', inputs.working_directory || '.') }}
+
       - name: Configure git author
+        if: steps.paths.outputs.should_bump == 'true'
         uses: MaxiGarcia13/gh-actions/.github/actions/configure-git-author@main
 
       - name: Install dependencies
+        if: steps.paths.outputs.should_bump == 'true'
         run: npm ci
 
       - name: Bump version, commit, and tag
+        if: steps.paths.outputs.should_bump == 'true'
         env:
           BUMP: ${{ steps.bump.outputs.bump }}
         run: |
@@ -97,12 +113,14 @@ jobs:
           npm version "$BUMP" -m "chore(release): v%s"
 
       - name: Read release tag
+        if: steps.paths.outputs.should_bump == 'true'
         id: release_tag
         uses: MaxiGarcia13/gh-actions/.github/actions/read-release-tag@main
         with:
           working_directory: ${{ inputs.working_directory || '.' }}
 
       - name: Push commit and tags
+        if: steps.paths.outputs.should_bump == 'true'
         working-directory: ${{ github.workspace }}
         run: |
           git push origin "HEAD:${{ inputs.default_branch }}" --follow-tags

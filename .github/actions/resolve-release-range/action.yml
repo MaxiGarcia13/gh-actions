@@ -1,0 +1,35 @@
+name: Resolve release range
+description: Resolve the latest v* tag and git revision range since the last release
+
+outputs:
+  last_tag:
+    description: Latest v* tag, if present
+    value: ${{ steps.resolve.outputs.last_tag }}
+  range:
+    description: Git revision range since the last release (for example v1.0.0..HEAD)
+    value: ${{ steps.resolve.outputs.range }}
+
+runs:
+  using: composite
+  steps:
+    - id: resolve
+      shell: bash
+      working-directory: ${{ github.workspace }}
+      run: |
+        set -euo pipefail
+
+        git fetch --tags --force
+
+        last_tag=""
+        if git describe --tags --match "v*" --abbrev=0 >/dev/null 2>&1; then
+          last_tag="$(git describe --tags --match "v*" --abbrev=0)"
+        fi
+
+        if [[ -n "$last_tag" ]]; then
+          range="${last_tag}..HEAD"
+        else
+          range="HEAD"
+        fi
+
+        echo "last_tag=$last_tag" >> "$GITHUB_OUTPUT"
+        echo "range=$range" >> "$GITHUB_OUTPUT"
