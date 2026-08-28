@@ -23,11 +23,6 @@ on:
         type: string
         required: false
         default: ""
-      lfs:
-        description: Whether to fetch Git LFS files during checkout
-        type: boolean
-        required: false
-        default: false
 
 jobs:
   deploy:
@@ -39,15 +34,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          lfs: ${{ inputs.lfs }}
 
       - name: Pull latest changes
         run: git pull origin main
-
-      - name: Pull LFS files
-        if: inputs.lfs
-        run: git lfs pull
 
       - name: Setup Node
         uses: actions/setup-node@v4

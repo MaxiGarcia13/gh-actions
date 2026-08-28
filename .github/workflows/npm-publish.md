@@ -57,4 +57,3 @@ Prefer pinning to a tag or commit SHA instead of `@main` for stable builds.
 | Input     | Default       | Description                                      |
 | --------- | ------------- | ------------------------------------------------ |
 | `command` | `publish:npm` | npm script name executed as `npm run <command>`. |
-| `lfs`     | `false`       | When `true`, fetches Git LFS files during checkout. |

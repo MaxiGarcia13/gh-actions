@@ -47,11 +47,6 @@ on:
         type: boolean
         required: false
         default: false
-      lfs:
-        description: Whether to fetch Git LFS files during checkout
-        type: boolean
-        required: false
-        default: false
     outputs:
       created:
         description: Whether a new release was created (false if the release already existed)
@@ -80,11 +75,6 @@ jobs:
           ref: ${{ inputs.default_branch }}
           fetch-depth: 0
           fetch-tags: true
-          lfs: ${{ inputs.lfs }}
-
-      - name: Pull LFS files
-        if: inputs.lfs
-        run: git lfs pull
 
       - name: Ensure release tag is available
         run: |

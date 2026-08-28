@@ -8,11 +8,6 @@ on:
         type: string
         required: true
         default: "publish:npm"
-      lfs:
-        description: Whether to fetch Git LFS files during checkout
-        type: boolean
-        required: false
-        default: false
 
 jobs:
   publish:
@@ -23,11 +18,6 @@ jobs:
         with:
           ref: main
           fetch-depth: 0
-          lfs: ${{ inputs.lfs }}
-
-      - name: Pull LFS files
-        if: inputs.lfs
-        run: git lfs pull
 
       - name: Setup Node.js
         uses: actions/setup-node@v4

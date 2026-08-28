@@ -74,7 +74,6 @@ Prefer pinning to a tag or commit SHA instead of `@main` for stable builds.
 | `node_version` | `24` | Node.js version used by `actions/setup-node`. |
 | `working_directory` | `.` | Directory containing `package.json` and `package-lock.json` (useful for monorepos). |
 | `use_release_notes` | `true` | When `true`, runs the `release-notes` job after the bump to create a GitHub Release via [`create-release-notes.yml`](create-release-notes.yml). Set to `false` to skip release creation. |
-| `lfs` | `false` | When `true`, fetches Git LFS files during checkout (`actions/checkout` `lfs` input). |
 
 Example with custom inputs:
 

@@ -83,7 +83,6 @@ Prefer pinning to a tag or commit SHA instead of `@main` for stable builds. Omit
 | `working_directory`       | `.`            | Directory containing `package.json` (useful for monorepos).                                      |
 | `deployment_environment`  | `production`   | GitHub Environment name for this job (Deployments / Environments UI).                            |
 | `deployment_url`          | _(empty)_      | Optional URL for the environment link in GitHub; omit or leave empty to skip the link.           |
-| `lfs`                     | `false`        | When `true`, fetches Git LFS files during checkout.                                              |
 
 Example with custom inputs:
 
