@@ -68,12 +68,11 @@ Prefer pinning to a tag or commit SHA instead of `@main` for stable builds.
 
 ## Inputs
 
-| Input | Default | Description |
-| --- | --- | --- |
-| `default_branch` | `main` | Branch receiving the bump commit and tags (`git push origin HEAD:<branch> --follow-tags`). |
-| `node_version` | `24` | Node.js version used by `actions/setup-node`. |
-| `working_directory` | `.` | Directory containing `package.json` and `package-lock.json` (useful for monorepos). |
-| `use_release_notes` | `true` | When `true`, runs the `release-notes` job after the bump to create a GitHub Release via [`create-release-notes.yml`](create-release-notes.yml). Set to `false` to skip release creation. |
+| Input               | Default | Description                                                                                |
+| ------------------- | ------- | ------------------------------------------------------------------------------------------ |
+| `default_branch`    | `main`  | Branch receiving the bump commit and tags (`git push origin HEAD:<branch> --follow-tags`). |
+| `node_version`      | `24`    | Node.js version used by `actions/setup-node`.                                              |
+| `working_directory` | `.`     | Directory containing `package.json` and `package-lock.json` (useful for monorepos).        |
 
 Example with custom inputs:
 
@@ -103,9 +102,9 @@ Release note customization (templates, title, draft/prerelease) is configured on
 
 ## Outputs
 
-| Output | Description |
-| --- | --- |
-| `tag` | Release tag created by the bump (for example `v1.2.3`). Empty when the bump job is skipped. |
+| Output | Description                                                                                 |
+| ------ | ------------------------------------------------------------------------------------------- |
+| `tag`  | Release tag created by the bump (for example `v1.2.3`). Empty when the bump job is skipped. |
 
 Downstream jobs in the caller workflow can read it as `needs.bump.outputs.tag`:
 

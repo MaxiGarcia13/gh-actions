@@ -77,12 +77,12 @@ Prefer pinning to a tag or commit SHA instead of `@main` for stable builds. Omit
 
 ## Inputs
 
-| Input                     | Default        | Description                                                                                      |
-| ------------------------- | -------------- | ------------------------------------------------------------------------------------------------ |
-| `node_version`            | `24`           | Node.js version used by `actions/setup-node`.                                                    |
-| `working_directory`       | `.`            | Directory containing `package.json` (useful for monorepos).                                      |
-| `deployment_environment`  | `production`   | GitHub Environment name for this job (Deployments / Environments UI).                            |
-| `deployment_url`          | _(empty)_      | Optional URL for the environment link in GitHub; omit or leave empty to skip the link.           |
+| Input                    | Default      | Description                                                                            |
+| ------------------------ | ------------ | -------------------------------------------------------------------------------------- |
+| `node_version`           | `24`         | Node.js version used by `actions/setup-node`.                                          |
+| `working_directory`      | `.`          | Directory containing `package.json` (useful for monorepos).                            |
+| `deployment_environment` | `production` | GitHub Environment name for this job (Deployments / Environments UI).                  |
+| `deployment_url`         | _(empty)_    | Optional URL for the environment link in GitHub; omit or leave empty to skip the link. |
 
 Example with custom inputs:
 

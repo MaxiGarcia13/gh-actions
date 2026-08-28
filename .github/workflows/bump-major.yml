@@ -18,11 +18,6 @@ on:
         type: string
         required: false
         default: "."
-      use_release_notes:
-        description: Whether to use release notes
-        type: boolean
-        required: false
-        default: true
     outputs:
       tag:
         description: Release tag created by the bump (for example v1.2.3)
@@ -77,11 +72,3 @@ jobs:
         working-directory: ${{ github.workspace }}
         run: |
           git push origin "HEAD:${{ inputs.default_branch }}" --follow-tags
-
-  release-notes:
-    if: inputs.use_release_notes
-    needs: bump
-    uses: ./.github/workflows/create-release-notes.yml
-    with:
-      tag: ${{ needs.bump.outputs.tag }}
-      default_branch: ${{ inputs.default_branch }}

@@ -81,12 +81,12 @@ Thanks for using **{{repository}}**.
 
 Supported placeholders:
 
-| Placeholder           | Replaced with                                      |
-| --------------------- | -------------------------------------------------- |
-| `{{tag}}`             | Release tag (for example `v1.2.3`)                 |
-| `{{version}}`         | Tag without the leading `v` (for example `1.2.3`)  |
-| `{{repository}}`      | Repository slug (`owner/name`)                     |
-| `{{generated_notes}}` | GitHub-generated changelog for this release        |
+| Placeholder           | Replaced with                                     |
+| --------------------- | ------------------------------------------------- |
+| `{{tag}}`             | Release tag (for example `v1.2.3`)                |
+| `{{version}}`         | Tag without the leading `v` (for example `1.2.3`) |
+| `{{repository}}`      | Repository slug (`owner/name`)                    |
+| `{{generated_notes}}` | GitHub-generated changelog for this release       |
 
 When `{{generated_notes}}` appears in the template, the workflow calls the [Generate release notes](https://docs.github.com/en/rest/releases/releases#generate-release-notes-content-for-a-release) API and substitutes the result.
 
@@ -105,24 +105,24 @@ Prefer pinning to a tag or commit SHA instead of `@main` for stable builds.
 
 ## Inputs
 
-| Input              | Default | Description                                                                 |
-| ------------------ | ------- | --------------------------------------------------------------------------- |
-| `tag`              | —       | Git tag for the release (for example `v1.2.3`). Required.                   |
-| `default_branch`   | `main`  | Branch to check out first; used to sync refs before fetching the tag.       |
-| `title`            | `Release <tag>` | Release title. Supports `{{tag}}`.                                  |
-| `notes_template`   | —       | Path to a markdown template file in the caller repo.                        |
-| `notes_start_tag`  | —       | Previous tag to start from when generating release notes.                   |
-| `notes_config`     | —       | Path to a GitHub release notes config file (for example `.github/release.yml`). Used when generating notes via the API. |
-| `generate_notes`   | `true`  | Use GitHub-generated notes when no template is provided.                    |
-| `draft`            | `false` | Create the release as a draft.                                              |
-| `prerelease`       | `false` | Mark the release as a prerelease.                                           |
+| Input             | Default         | Description                                                                                                             |
+| ----------------- | --------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `tag`             | —               | Git tag for the release (for example `v1.2.3`). Required.                                                               |
+| `default_branch`  | `main`          | Branch to check out first; used to sync refs before fetching the tag.                                                   |
+| `title`           | `Release <tag>` | Release title. Supports `{{tag}}`.                                                                                      |
+| `notes_template`  | —               | Path to a markdown template file in the caller repo.                                                                    |
+| `notes_start_tag` | —               | Previous tag to start from when generating release notes.                                                               |
+| `notes_config`    | —               | Path to a GitHub release notes config file (for example `.github/release.yml`). Used when generating notes via the API. |
+| `generate_notes`  | `true`          | Use GitHub-generated notes when no template is provided.                                                                |
+| `draft`           | `false`         | Create the release as a draft.                                                                                          |
+| `prerelease`      | `false`         | Mark the release as a prerelease.                                                                                       |
 
 ## Outputs
 
-| Output        | Description                                                       |
-| ------------- | ----------------------------------------------------------------- |
+| Output        | Description                                                        |
+| ------------- | ------------------------------------------------------------------ |
 | `created`     | `true` if a new release was created; `false` if it already existed |
-| `release_url` | URL of the GitHub Release                                         |
+| `release_url` | URL of the GitHub Release                                          |
 
 ## Integration with bump workflows
 

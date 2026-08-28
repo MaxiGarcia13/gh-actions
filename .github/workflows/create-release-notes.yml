@@ -150,13 +150,13 @@ jobs:
             fi
 
             content="$(<"$TEMPLATE")"
-            version="${TAG#v}"
+            VERSION="${TAG#v}"
             content="${content//\{\{tag\}\}/$TAG}"
             content="${content//\{\{version\}\}/$VERSION}"
             content="${content//\{\{repository\}\}/$REPO}"
 
             if [[ "$content" == *"{{generated_notes}}"* ]]; then
-              generated_notes="$(generate_notes_body)"
+              GENERATED_NOTES="$(generate_notes_body)"
               content="${content//\{\{generated_notes\}\}/$GENERATED_NOTES}"
             fi
 
