@@ -27,6 +27,8 @@ runs:
       run: |
         set -euo pipefail
 
+        echo "Release range: ${RANGE}"
+
         should_bump="$(python3 - <<'PY'
         import fnmatch
         import os
@@ -38,8 +40,25 @@ runs:
         paths_include = os.environ.get("PATHS", "").strip()
         paths_ignore = os.environ.get("PATHS_IGNORE", "").strip()
 
-        include_patterns = [p.strip() for p in paths_include.splitlines() if p.strip()]
-        ignore_patterns = [p.strip() for p in paths_ignore.splitlines() if p.strip()]
+        def normalize_pattern(pattern: str) -> str:
+            pattern = pattern.strip()
+            if len(pattern) >= 2 and pattern[0] == pattern[-1] and pattern[0] in "\"'":
+                pattern = pattern[1:-1].strip()
+            return pattern.lstrip("./")
+
+        include_patterns = [
+            normalize_pattern(pattern)
+            for pattern in paths_include.splitlines()
+            if normalize_pattern(pattern)
+        ]
+        ignore_patterns = [
+            normalize_pattern(pattern)
+            for pattern in paths_ignore.splitlines()
+            if normalize_pattern(pattern)
+        ]
+
+        print(f"Include patterns: {include_patterns or '(none)'}", file=sys.stderr)
+        print(f"Ignore patterns: {ignore_patterns or '(none)'}", file=sys.stderr)
 
         if not include_patterns and not ignore_patterns:
             print("true")
@@ -53,7 +72,12 @@ runs:
         )
         files = sorted({line for line in result.stdout.splitlines() if line.strip()})
 
+        print(f"Changed files since range ({len(files)}):", file=sys.stderr)
+        for path in files:
+            print(f"  - {path}", file=sys.stderr)
+
         if not files:
+            print("No changed files in range; skipping bump.", file=sys.stderr)
             print("false")
             sys.exit(0)
 
@@ -76,9 +100,9 @@ runs:
             return re.compile(f"^{''.join(parts)}$")
 
         def matches(path: str, pattern: str) -> bool:
-            candidates = {pattern, pattern.lstrip("./")}
+            candidates = {pattern}
             if not pattern.startswith("**/"):
-                candidates.add(f"**/{pattern.lstrip('./')}")
+                candidates.add(f"**/{pattern}")
 
             if any(glob_to_regex(candidate).match(path) for candidate in candidates):
                 return True
@@ -100,11 +124,17 @@ runs:
         should_bump = True
 
         if include_patterns:
-            should_bump = any(matches_any(path, include_patterns) for path in files)
+            matched_files = [path for path in files if matches_any(path, include_patterns)]
+            should_bump = bool(matched_files)
+            print(
+                f"Include matches ({len(matched_files)}): {matched_files or '(none)'}",
+                file=sys.stderr,
+            )
 
         if should_bump and ignore_patterns:
             should_bump = not all(matches_any(path, ignore_patterns) for path in files)
 
+        print(f"should_bump={should_bump}", file=sys.stderr)
         print(str(should_bump).lower())
         PY
         )"

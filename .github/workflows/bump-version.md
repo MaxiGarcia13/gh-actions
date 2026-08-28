@@ -79,7 +79,17 @@ Prefer pinning to a tag or commit SHA instead of `@main` for stable builds.
 | `paths`             | `""`    | Newline-separated globs. Bump only if at least one file changed since the last tag matches. |
 | `paths_ignore`      | `""`    | Newline-separated globs. Skip bump when every changed file since the last tag matches.     |
 
-Path filters use the same revision range as the bump decision (`<last-v*-tag>..HEAD`). When both inputs are empty, every change can trigger a bump.
+Path filters use the same revision range as the bump decision (`<last-v*-tag>..HEAD`). Files are collected from every commit in that range. When both inputs are empty, every change can trigger a bump.
+
+Use repo-root paths without quotes:
+
+```yaml
+paths: |
+  src/**
+  public/**
+```
+
+Do not quote patterns (`'src/**'` would be treated literally in YAML unless the action strips them).
 
 Example — skip docs-only or workflow-only changes:
 

@@ -33,3 +33,4 @@ runs:
 
         echo "last_tag=$last_tag" >> "$GITHUB_OUTPUT"
         echo "range=$range" >> "$GITHUB_OUTPUT"
+        echo "Resolved release range: ${range:-HEAD}"
