@@ -57,7 +57,7 @@ jobs:
 
       - name: Resolve release range
         id: range
-        uses: ./.github/actions/resolve-release-range
+        uses: MaxiGarcia13/gh-actions/.github/actions/resolve-release-range@main
 
       - name: Decide bump (minor if any feat:, else patch)
         id: bump
@@ -78,7 +78,7 @@ jobs:
 
       - name: Check changed paths
         id: paths
-        uses: ./.github/actions/check-release-paths
+        uses: MaxiGarcia13/gh-actions/.github/actions/check-release-paths@main
         with:
           range: ${{ steps.range.outputs.range }}
           paths: ${{ inputs.paths }}
