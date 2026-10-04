@@ -2,7 +2,7 @@
 
 Workflow file: [`.github/workflows/deploy-to-vercel.yml`](deploy-to-vercel.yml)
 
-Reusable workflow (`workflow_call`) that deploys the project to Vercel production using the Vercel CLI: it runs `vercel pull`, `vercel build --prod`, and `vercel deploy --prebuilt --prod`. Use this when you want GitHub Actions to own production deploys instead of Vercel’s Git integration.
+Reusable workflow (`workflow_call`) that deploys the project to Vercel production using the Vercel CLI. By default it runs `vercel pull`, `vercel build --prod`, and `vercel deploy --prebuilt --prod`. Set `prebuilt: false` to skip the CI build and run `vercel deploy --prod` so Vercel builds on its infrastructure (useful when prebuilt deploys bake incorrect origin / `VERCEL_URL` values). Use this when you want GitHub Actions to own production deploys instead of Vercel’s Git integration.
 
 ## Disable Vercel’s automatic Git deployments
 
@@ -25,7 +25,9 @@ That sets [`git.deploymentEnabled`](https://vercel.com/docs/project-configuratio
 - Runs `git pull origin main` (expects the default branch to be `main` and appropriate `contents` / network permissions if you rely on this step).
 - Sets up Node.js and runs `npm install` in the configured working directory.
 - Installs the Vercel CLI globally.
-- Runs `vercel pull` for the production environment, then `vercel build --prod`, then `vercel deploy --prebuilt --prod`.
+- Runs `vercel pull` for the production environment.
+- When `prebuilt` is `true` (default): runs `vercel build --prod`, then `vercel deploy --prebuilt --prod`.
+- When `prebuilt` is `false`: skips the CI build and runs `vercel deploy --prod` so Vercel builds remotely.
 
 Ensure the Vercel project is linked for CI (for example via `vercel pull` / project settings and environment variables such as org and project IDs where your setup requires them).
 
@@ -83,6 +85,7 @@ Prefer pinning to a tag or commit SHA instead of `@main` for stable builds. Omit
 | `working_directory`      | `.`          | Directory containing `package.json` (useful for monorepos).                            |
 | `deployment_environment` | `production` | GitHub Environment name for this job (Deployments / Environments UI).                  |
 | `deployment_url`         | _(empty)_    | Optional URL for the environment link in GitHub; omit or leave empty to skip the link. |
+| `prebuilt`               | `true`       | Build in CI and `deploy --prebuilt`. Set `false` to upload source and let Vercel build. |
 
 Example with custom inputs:
 
@@ -96,4 +99,5 @@ jobs:
       working_directory: apps/web
       deployment_environment: production
       deployment_url: https://your-app.vercel.app
+      prebuilt: false
 ```

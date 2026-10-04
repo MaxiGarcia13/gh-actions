@@ -23,6 +23,11 @@ on:
         type: string
         required: false
         default: ""
+      prebuilt:
+        description: If true, build in CI and deploy with --prebuilt. If false, upload source and let Vercel build (vercel deploy --prod).
+        type: boolean
+        required: false
+        default: true
 
 jobs:
   deploy:
@@ -50,6 +55,14 @@ jobs:
 
       - run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
 
-      - run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+      - name: Build on CI
+        if: ${{ inputs.prebuilt }}
+        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
 
-      - run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+      - name: Deploy prebuilt
+        if: ${{ inputs.prebuilt }}
+        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy (build on Vercel)
+        if: ${{ !inputs.prebuilt }}
+        run: vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }}
